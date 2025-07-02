@@ -1,109 +1,155 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ербаев Чат + Видеозвонки</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: 'Rubik', sans-serif;
-            background: linear-gradient(135deg, #74ebd5, #ACB6E5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        .chat-container {
-            background: white;
-            width: 95%;
-            max-width: 500px;
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        video {
-            width: 100%;
-            max-height: 200px;
-            background: black;
-        }
-        button {
-            padding: 10px;
-            margin-top: 5px;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        button:hover { background: #43a047; }
-        .small-btn { padding: 8px; font-size: 0.9rem; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ербаев Чат + Видеозвонки</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
+    body {
+      margin: 0;
+      font-family: 'Rubik', sans-serif;
+      background: linear-gradient(135deg, #74ebd5, #acb6e5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+    }
+
+    .chat-container {
+      background: white;
+      width: 95%;
+      max-width: 500px;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chat-box {
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+
+    .chat-box div {
+      margin-bottom: 8px;
+      padding: 6px 10px;
+      background: #e3f2fd;
+      border-radius: 10px;
+      max-width: 90%;
+      word-wrap: break-word;
+    }
+
+    input {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    button {
+      padding: 12px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #43a047;
+    }
+
+    video {
+      width: 100%;
+      max-height: 180px;
+      background: black;
+      border-radius: 10px;
+    }
+
+    .btns {
+      display: flex;
+      gap: 10px;
+    }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database-compat.js"></script>
 </head>
 <body>
-<div class="chat-container">
+  <div class="chat-container">
     <h2>Ербаев Чат + Видеозвонки</h2>
+
     <div id="chat-box" class="chat-box"></div>
     <input id="name" type="text" placeholder="Ваше имя" />
     <input id="message" type="text" placeholder="Сообщение" />
     <button onclick="sendMessage()">Отправить</button>
 
-    <button onclick="startCall()" class="small-btn">Позвонить</button>
-    <button onclick="answerCall()" class="small-btn">Ответить</button>
-    
-    <video id="localVideo" autoplay muted></video>
-    <video id="remoteVideo" autoplay></video>
-</div>
+    <div class="btns">
+      <button onclick="startCall()">📞 Позвонить</button>
+      <button onclick="answerCall()">✅ Ответить</button>
+    </div>
 
-<script>
+    <video id="localVideo" autoplay muted playsinline></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+  </div>
+
+  <script>
+    // Firebase
     const firebaseConfig = {
-        apiKey: "AIzaSyB0USq641T3GEL72iIJEgvZ5t8hlWeVX6A",
-        authDomain: "chat-95e32.firebaseapp.com",
-        databaseURL: "https://chat-95e32-default-rtdb.firebaseio.com",
-        projectId: "chat-95e32",
-        storageBucket: "chat-95e32.appspot.com",
-        messagingSenderId: "185418388302",
-        appId: "1:185418388302:web:e7a6efede364055a49441f",
-        measurementId: "G-K5N7ZTS9RM"
+      apiKey: "AIzaSyB0USq641T3GEL72iIJEgvZ5t8hlWeVX6A",
+      authDomain: "chat-95e32.firebaseapp.com",
+      databaseURL: "https://chat-95e32-default-rtdb.firebaseio.com",
+      projectId: "chat-95e32",
+      storageBucket: "chat-95e32.appspot.com",
+      messagingSenderId: "185418388302",
+      appId: "1:185418388302:web:e7a6efede364055a49441f",
+      measurementId: "G-K5N7ZTS9RM"
     };
+
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // ======= Чат =======
+    // ЧАТ
     function sendMessage() {
-        const name = document.getElementById('name').value.trim();
-        const message = document.getElementById('message').value.trim();
-        if (!name || !message) return;
+      const name = document.getElementById('name').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (!name || !message) return;
 
-        db.ref("messages").push({
-            name,
-            message,
-            timestamp: Date.now()
-        });
+      db.ref("messages").push({
+        name,
+        message,
+        timestamp: Date.now()
+      });
 
-        document.getElementById('message').value = '';
+      document.getElementById('message').value = '';
     }
 
     db.ref("messages").on("child_added", (snapshot) => {
-        const { name, message } = snapshot.val();
-        const msgEl = document.createElement("div");
-        msgEl.textContent = `${name}: ${message}`;
-        document.getElementById("chat-box").appendChild(msgEl);
-        document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+      const { name, message } = snapshot.val();
+      const msgEl = document.createElement("div");
+      msgEl.textContent = `${name}: ${message}`;
+      document.getElementById("chat-box").appendChild(msgEl);
+      document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
     });
 
-    // ======= WebRTC =======
+    // ВИДЕОЗВОНОК
     const localVideo = document.getElementById('localVideo');
     const remoteVideo = document.getElementById('remoteVideo');
     let localStream;
@@ -111,76 +157,85 @@
     const servers = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
     async function startCall() {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localVideo.srcObject = localStream;
+      cleanupCall();
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
 
-        peerConnection = new RTCPeerConnection(servers);
+      peerConnection = createPeerConnection('caller');
 
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-        });
+      localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+      });
 
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                db.ref('call/caller/candidates').push(JSON.stringify(event.candidate));
-            }
-        };
-
-        peerConnection.ontrack = event => {
-            remoteVideo.srcObject = event.streams[0];
-        };
-
-        const offer = await peerConnection.createOffer();
-        await peerConnection.setLocalDescription(offer);
-
-        db.ref('call/offer').set(JSON.stringify(offer));
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      await db.ref('call/offer').set(JSON.stringify(offer));
     }
 
     async function answerCall() {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        localVideo.srcObject = localStream;
+      cleanupCall();
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
 
-        peerConnection = new RTCPeerConnection(servers);
+      peerConnection = createPeerConnection('answerer');
 
-        localStream.getTracks().forEach(track => {
-            peerConnection.addTrack(track, localStream);
-        });
+      localStream.getTracks().forEach(track => {
+        peerConnection.addTrack(track, localStream);
+      });
 
-        peerConnection.onicecandidate = event => {
-            if (event.candidate) {
-                db.ref('call/answerer/candidates').push(JSON.stringify(event.candidate));
-            }
-        };
+      const offerSnapshot = await db.ref('call/offer').get();
+      const offer = JSON.parse(offerSnapshot.val());
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
 
-        peerConnection.ontrack = event => {
-            remoteVideo.srcObject = event.streams[0];
-        };
-
-        const offerSnapshot = await db.ref('call/offer').get();
-        const offer = JSON.parse(offerSnapshot.val());
-        await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        db.ref('call/answer').set(JSON.stringify(answer));
-
-        db.ref('call/caller/candidates').on('child_added', snapshot => {
-            const candidate = new RTCIceCandidate(JSON.parse(snapshot.val()));
-            peerConnection.addIceCandidate(candidate);
-        });
+      const answer = await peerConnection.createAnswer();
+      await peerConnection.setLocalDescription(answer);
+      await db.ref('call/answer').set(JSON.stringify(answer));
     }
 
-    db.ref('call/answer').on('value', async snapshot => {
-        const answer = snapshot.val();
-        if (answer && peerConnection) {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
+    function createPeerConnection(role) {
+      const pc = new RTCPeerConnection(servers);
+
+      pc.onicecandidate = event => {
+        if (event.candidate) {
+          db.ref(`call/${role}/candidates`).push(JSON.stringify(event.candidate));
         }
+      };
+
+      pc.ontrack = event => {
+        remoteVideo.srcObject = event.streams[0];
+      };
+
+      return pc;
+    }
+
+    // Обработка ICE кандидатов
+    db.ref('call/caller/candidates').on('child_added', snapshot => {
+      if (peerConnection) {
+        const candidate = new RTCIceCandidate(JSON.parse(snapshot.val()));
+        peerConnection.addIceCandidate(candidate);
+      }
     });
 
     db.ref('call/answerer/candidates').on('child_added', snapshot => {
+      if (peerConnection) {
         const candidate = new RTCIceCandidate(JSON.parse(snapshot.val()));
-        if (peerConnection) peerConnection.addIceCandidate(candidate);
+        peerConnection.addIceCandidate(candidate);
+      }
     });
-</script>
+
+    db.ref('call/answer').on('value', async snapshot => {
+      const answer = snapshot.val();
+      if (answer && peerConnection) {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(JSON.parse(answer)));
+      }
+    });
+
+    // Очистка перед звонком (опционально)
+    function cleanupCall() {
+      db.ref('call').remove();
+      if (peerConnection) peerConnection.close();
+      peerConnection = null;
+    }
+  </script>
 </body>
 </html>
